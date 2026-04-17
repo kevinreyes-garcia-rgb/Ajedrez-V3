@@ -26,11 +26,12 @@ function selectCharacter(character) {
     const difficulties = ['easy', 'medium', 'hard', 'extreme'];
     if (character === 'agnes') difficulties.push('mega');
     const diffNames = { easy: 'Fácil', medium: 'Normal', hard: 'Difícil', extreme: 'Extremo', mega: 'Mega Extremo' };
+    
     difficulties.forEach(diff => {
         const btn = document.createElement('button');
         btn.className = `difficulty-btn ${diff}`;
         btn.textContent = diffNames[diff];
-        btn.onclick = () => startGame(diff);
+        btn.onclick = function() { startGame(diff); };
         container.appendChild(btn);
     });
 }
@@ -40,9 +41,11 @@ function startGame(difficulty) {
     game = new ChessEngine();
     ai = new ChessAI(difficulty, currentCharacter);
     playerColor = 'w';
+    
     document.getElementById('difficulty-screen').classList.remove('active');
     document.getElementById('game-screen').classList.add('active');
     document.getElementById('black-name').textContent = currentCharacter === 'agnes' ? 'Agnes 👑' : 'Rick 🤠';
+    
     whiteTime = 600;
     blackTime = 600;
     startTimer();
@@ -53,33 +56,53 @@ function startGame(difficulty) {
 function renderBoard() {
     const board = document.getElementById('board');
     board.innerHTML = '';
+    
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const square = document.createElement('div');
             square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
             square.dataset.row = row;
             square.dataset.col = col;
+            
             const piece = game.getPiece(row, col);
-            if (piece) square.textContent = pieceSymbols[piece.color][piece.type];
+            if (piece) {
+                square.textContent = pieceSymbols[piece.color][piece.type];
+            }
+            
             if (game.moveHistory.length > 0) {
                 const lastMove = game.moveHistory[game.moveHistory.length - 1];
-                if ((row === lastMove.from.row && col === lastMove.from.col) || (row === lastMove.to.row && col === lastMove.to.col)) {
+                if ((row === lastMove.from.row && col === lastMove.from.col) || 
+                    (row === lastMove.to.row && col === lastMove.to.col)) {
                     square.classList.add('last-move');
                 }
             }
-            if (piece && piece.type === 'k' && game.isInCheck(piece.color)) square.classList.add('check');
-            if (selectedSquare && selectedSquare.row === row && selectedSquare.col === col) square.classList.add('selected');
-            if (validMoves.some(m => m.row === row && m.col === col)) square.classList.add('valid-move');
-            square.onclick = () => handleSquareClick(row, col);
+            
+            if (piece && piece.type === 'k' && game.isInCheck(piece.color)) {
+                square.classList.add('check');
+            }
+            
+            if (selectedSquare && selectedSquare.row === row && selectedSquare.col === col) {
+                square.classList.add('selected');
+            }
+            
+            const isValidMove = validMoves.some(m => m.row === row && m.col === col);
+            if (isValidMove) {
+                square.classList.add('valid-move');
+            }
+            
+            square.onclick = function() { handleSquareClick(row, col); };
             board.appendChild(square);
         }
     }
+    
     updateCapturedPieces();
 }
 
 function handleSquareClick(row, col) {
     if (game.turn !== playerColor) return;
+    
     const piece = game.getPiece(row, col);
+    
     if (selectedSquare) {
         const move = validMoves.find(m => m.row === row && m.col === col);
         if (move) {
@@ -87,6 +110,7 @@ function handleSquareClick(row, col) {
             return;
         }
     }
+    
     if (piece && piece.color === playerColor) {
         selectedSquare = { row, col };
         validMoves = game.getValidMoves(row, col);
@@ -123,12 +147,16 @@ function completeMove(from, to) {
     validMoves = [];
     renderBoard();
     updateStatus();
+    
     const state = game.getGameState();
     if (state.status !== 'ongoing') {
         endGame(state);
         return;
     }
-    if (game.turn !== playerColor) setTimeout(makeAIMove, 500);
+    
+    if (game.turn !== playerColor) {
+        setTimeout(makeAIMove, 500);
+    }
 }
 
 function makeAIMove() {
@@ -138,13 +166,16 @@ function makeAIMove() {
         renderBoard();
         updateStatus();
         const state = game.getGameState();
-        if (state.status !== 'ongoing') endGame(state);
+        if (state.status !== 'ongoing') {
+            endGame(state);
+        }
     }
 }
 
 function updateStatus() {
     const state = game.getGameState();
     const statusEl = document.getElementById('status-message');
+    
     if (state.check) {
         statusEl.textContent = '¡Jaque!';
         statusEl.style.color = '#e74c3c';
@@ -158,8 +189,15 @@ function updateStatus() {
 }
 
 function updateCapturedPieces() {
-    document.getElementById('captured-black').innerHTML = game.capturedPieces.b.map(p => pieceSymbols[p.color][p.type]).join('');
-    document.getElementById('captured-white').innerHTML = game.capturedPieces.w.map(p => pieceSymbols[p.color][p.type]).join('');
+    const blackContainer = document.getElementById('captured-black');
+    const whiteContainer = document.getElementById('captured-white');
+    
+    blackContainer.innerHTML = game.capturedPieces.b
+        .map(p => pieceSymbols[p.color][p.type])
+        .join('');
+    whiteContainer.innerHTML = game.capturedPieces.w
+        .map(p => pieceSymbols[p.color][p.type])
+        .join('');
 }
 
 function startTimer() {
@@ -172,7 +210,10 @@ function startTimer() {
             blackTime--;
             document.getElementById('black-timer').textContent = formatTime(blackTime);
         }
-        if (whiteTime <= 0 || blackTime <= 0) endGame({ status: 'timeout', winner: whiteTime <= 0 ? 'b' : 'w' });
+        
+        if (whiteTime <= 0 || blackTime <= 0) {
+            endGame({ status: 'timeout', winner: whiteTime <= 0 ? 'b' : 'w' });
+        }
     }, 1000);
 }
 
@@ -187,16 +228,22 @@ function endGame(state) {
     const endScreen = document.getElementById('end-screen');
     const title = document.getElementById('end-title');
     const message = document.getElementById('end-message');
+    
     endScreen.classList.add('active');
+    
     if (state.status === 'checkmate') {
         if (state.winner === playerColor) {
             title.textContent = '¡Victoria!';
             title.style.color = '#27ae60';
-            message.textContent = currentDifficulty === 'mega' && currentCharacter === 'agnes' ? '¡Increíble! Has derrotado a Agnes en Mega Extremo.' : '¡Has ganado la partida!';
+            message.textContent = currentDifficulty === 'mega' && currentCharacter === 'agnes' 
+                ? '¡Increíble! Has derrotado a Agnes en Mega Extremo.' 
+                : '¡Has ganado la partida!';
         } else {
             title.textContent = 'Derrota';
             title.style.color = '#e74c3c';
-            message.textContent = currentCharacter === 'agnes' ? 'Agnes te ha derrotado con su estrategia.' : 'Rick ha ganado esta vez.';
+            message.textContent = currentCharacter === 'agnes' 
+                ? 'Agnes te ha derrotado con su estrategia.' 
+                : 'Rick ha ganado esta vez.';
         }
     } else if (state.status === 'draw') {
         title.textContent = 'Tablas';
@@ -209,17 +256,26 @@ function endGame(state) {
 }
 
 function resign() {
-    if (confirm('¿Seguro que quieres rendirte?')) endGame({ status: 'resign', winner: game.turn === 'w' ? 'b' : 'w' });
+    if (confirm('¿Seguro que quieres rendirte?')) {
+        endGame({ status: 'resign', winner: game.turn === 'w' ? 'b' : 'w' });
+    }
 }
 
 function offerDraw() {
-    const acceptChance = currentDifficulty === 'easy' ? 0.3 : currentDifficulty === 'medium' ? 0.2 : 0.1;
-    if (Math.random() < acceptChance) endGame({ status: 'draw', winner: null });
-    else alert(currentCharacter === 'agnes' ? 'Agnes rechaza el tablas. ¡Quiere ganar!' : 'Rick quiere seguir jugando.');
+    const acceptChance = currentDifficulty === 'easy' ? 0.3 : 
+                        currentDifficulty === 'medium' ? 0.2 : 0.1;
+    
+    if (Math.random() < acceptChance) {
+        endGame({ status: 'draw', winner: null });
+    } else {
+        alert(currentCharacter === 'agnes' ? 'Agnes rechaza el tablas. ¡Quiere ganar!' : 'Rick quiere seguir jugando.');
+    }
 }
 
 function restartGame() {
-    if (confirm('¿Empezar nueva partida?')) startGame(currentDifficulty);
+    if (confirm('¿Empezar nueva partida?')) {
+        startGame(currentDifficulty);
+    }
 }
 
 function returnToMenu() {
