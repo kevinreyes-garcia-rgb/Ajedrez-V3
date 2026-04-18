@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Video de intro (opcional) -->
+    <!-- Video de intro -->
     <div id="intro-video" class="video-overlay">
-        <video id="video-player" autoplay muted>
+        <video id="video-player" muted controls>
             <source src="assets/video/intro.mp4" type="video/mp4">
         </video>
         <button id="skip-intro" onclick="skipIntro()">Saltar →</button>
@@ -109,7 +109,7 @@
         </div>
     </div>
 
-    <!-- Audio elements -->
+    <!-- Audios -->
     <audio id="snd-click" src="assets/sounds/click.mp3" preload="auto"></audio>
     <audio id="snd-move" src="assets/sounds/move.mp3" preload="auto"></audio>
     <audio id="snd-capture" src="assets/sounds/capture.mp3" preload="auto"></audio>
@@ -121,8 +121,35 @@
     <audio id="snd-draw" src="assets/sounds/draw.mp3" preload="auto"></audio>
     <audio id="snd-bg" src="assets/sounds/background.mp3" loop preload="auto"></audio>
 
-    <script src="js/chess-engine.js"></script>
-    <script src="js/ai.js"></script>
-    <script src="js/game.js"></script>
+    <!-- Scripts -->
+    <script src="js/chess-engine.js" defer></script>
+    <script src="js/ai.js" defer></script>
+    <script src="js/game.js" defer></script>
+
+    <!-- 🔧 FIX DEL BOTÓN SALTAR -->
+    <script>
+    function skipIntro() {
+        const intro = document.getElementById("intro-video");
+
+        // Oculta el intro
+        intro.style.display = "none";
+
+        // Detiene el video
+        const video = document.getElementById("video-player");
+        if (video) {
+            video.pause();
+            video.currentTime = 0;
+        }
+    }
+
+    // Auto-saltar cuando termine el video
+    document.addEventListener("DOMContentLoaded", function() {
+        const video = document.getElementById("video-player");
+        if (video) {
+            video.addEventListener("ended", skipIntro);
+        }
+    });
+    </script>
+
 </body>
 </html>
