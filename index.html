@@ -13,7 +13,7 @@
         <video id="video-player" muted controls>
             <source src="assets/video/intro.mp4" type="video/mp4">
         </video>
-        <button id="skip-intro" onclick="skipIntro()">Saltar →</button>
+        <button id="skip-intro">Saltar →</button>
     </div>
 
     <div class="container">
@@ -24,12 +24,12 @@
             <p class="subtitle">Elige tu oponente</p>
 
             <div class="characters">
-                <div class="card" onclick="selectChar('agnes')">
+                <div class="card" id="btn-agnes">
                     <img src="assets/images/agnes.png" class="avatar-img">
                     <h2>Agnes</h2>
                 </div>
 
-                <div class="card" onclick="selectChar('rick')">
+                <div class="card" id="btn-rick">
                     <img src="assets/images/rick.png" class="avatar-img">
                     <h2>Rick</h2>
                 </div>
@@ -41,75 +41,102 @@
             <h2 id="diff-title"></h2>
 
             <div class="diff-buttons">
-                <button onclick="startGame('easy')">Fácil</button>
-                <button onclick="startGame('medium')">Normal</button>
-                <button onclick="startGame('hard')">Difícil</button>
+                <button class="diff-btn easy" data-diff="easy">Fácil</button>
+                <button class="diff-btn medium" data-diff="medium">Normal</button>
+                <button class="diff-btn hard" data-diff="hard">Difícil</button>
+                <button class="diff-btn extreme" data-diff="extreme">Extremo</button>
             </div>
 
-            <button onclick="goBack()">← Volver</button>
+            <button class="back-btn" id="back-btn">← Volver</button>
         </div>
 
         <!-- JUEGO -->
         <div id="screen-game" class="screen">
             <div id="board"></div>
-            <button onclick="toMenu()">Salir</button>
         </div>
 
     </div>
+
+    <!-- AUDIOS -->
+    <audio id="snd-click" src="assets/sounds/click.mp3"></audio>
+    <audio id="snd-bg" src="assets/sounds/background.mp3" loop></audio>
 
     <!-- SCRIPTS -->
     <script src="js/chess-engine.js" defer></script>
     <script src="js/ai.js" defer></script>
     <script src="js/game.js" defer></script>
 
-    <!-- 🔥 FIX TOTAL -->
+    <!-- 🔥 FIX REAL -->
     <script>
-    let selectedChar = null;
+    document.addEventListener("DOMContentLoaded", () => {
 
-    function skipIntro() {
-        const intro = document.getElementById("intro-video");
-        intro.style.display = "none";
+        let selectedChar = null;
 
-        const video = document.getElementById("video-player");
-        if (video) {
-            video.pause();
-            video.currentTime = 0;
+        const screens = document.querySelectorAll(".screen");
+
+        function showScreen(id) {
+            screens.forEach(s => s.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
         }
-    }
 
-    // 👇 CAMBIAR PANTALLA
-    function showScreen(id) {
-        document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-    }
+        function playClick() {
+            const snd = document.getElementById("snd-click");
+            if (snd) {
+                snd.currentTime = 0;
+                snd.play();
+            }
+        }
 
-    // 👇 SELECCIÓN PERSONAJE
-    function selectChar(char) {
-        selectedChar = char;
+        // 🎬 INTRO
+        document.getElementById("skip-intro").onclick = () => {
+            document.getElementById("intro-video").style.display = "none";
+        };
 
-        document.getElementById("diff-title").innerText = 
-            "Elegiste: " + (char === "agnes" ? "Agnes" : "Rick");
+        // 👤 PERSONAJES
+        document.getElementById("btn-agnes").onclick = () => {
+            playClick();
+            selectedChar = "agnes";
+            document.getElementById("diff-title").innerText = "Agnes";
+            showScreen("screen-diff");
+        };
 
-        showScreen("screen-diff");
-    }
+        document.getElementById("btn-rick").onclick = () => {
+            playClick();
+            selectedChar = "rick";
+            document.getElementById("diff-title").innerText = "Rick";
+            showScreen("screen-diff");
+        };
 
-    // 👇 INICIAR JUEGO
-    function startGame(diff) {
-        console.log("Personaje:", selectedChar);
-        console.log("Dificultad:", diff);
+        // 🎮 DIFICULTAD
+        document.querySelectorAll(".diff-btn").forEach(btn => {
+            btn.onclick = () => {
+                playClick();
 
-        showScreen("screen-game");
+                const diff = btn.dataset.diff;
 
-        // Aquí luego puedes iniciar tu motor real
-    }
+                showScreen("screen-game");
 
-    function goBack() {
-        showScreen("screen-start");
-    }
+                // 🔥 LLAMA TU JUEGO REAL
+                if (typeof startGame === "function") {
+                    startGame(selectedChar, diff);
+                }
 
-    function toMenu() {
-        showScreen("screen-start");
-    }
+                // 🎵 música
+                const bg = document.getElementById("snd-bg");
+                if (bg) {
+                    bg.volume = 0.3;
+                    bg.play();
+                }
+            };
+        });
+
+        // 🔙 VOLVER
+        document.getElementById("back-btn").onclick = () => {
+            playClick();
+            showScreen("screen-start");
+        };
+
+    });
     </script>
 
 </body>
